@@ -1597,8 +1597,1305 @@ function manageSeasons(){
 function openPlayer(){
 
   openModal(
-
     "Add Player",
-
     `
-    <div class
+    <div class="formgrid">
+
+      <label>
+        Jersey #
+        <input id="pNum" placeholder="1">
+      </label>
+
+      <label>
+        Player Name
+        <input id="pName" placeholder="John Smith">
+      </label>
+
+      <label>
+        Position
+        <input id="pPos" placeholder="QB">
+      </label>
+
+      <label>
+        Class
+        <select id="pClass">
+          <option>Freshman</option>
+          <option>Sophomore</option>
+          <option>Junior</option>
+          <option>Senior</option>
+          <option>Graduate</option>
+        </select>
+      </label>
+
+      <label>
+        Height
+        <input id="pHeight" placeholder="6'2&quot;">
+      </label>
+
+      <label>
+        Weight
+        <input id="pWeight" placeholder="210">
+      </label>
+
+      <label>
+        Hometown
+        <input id="pHome" placeholder="Chicago, IL">
+      </label>
+
+      <label>
+        Previous School
+        <input id="pPrev" placeholder="High School">
+      </label>
+
+    </div>
+
+    <div class="toolbar">
+      <button class="good" onclick="createPlayer()">
+        Add Player
+      </button>
+    </div>
+    `
+  );
+
+}
+
+
+function createPlayer(){
+
+  const name =
+    document.getElementById("pName").value.trim();
+
+  if(!name){
+    alert("Enter a player name.");
+    return;
+  }
+
+  const p = {
+    id:uid(),
+    teamId:db.activeTeam,
+    seasonId:db.activeSeason,
+    number:document.getElementById("pNum").value.trim(),
+    name:name,
+    position:document.getElementById("pPos").value.trim(),
+    class:document.getElementById("pClass").value,
+    height:document.getElementById("pHeight").value.trim(),
+    weight:document.getElementById("pWeight").value.trim(),
+    hometown:document.getElementById("pHome").value.trim(),
+    previous:document.getElementById("pPrev").value.trim()
+  };
+
+  db.players.push(p);
+
+  save();
+  closeModal();
+  renderAll();
+
+}
+
+
+function editPlayer(id){
+
+  const p = db.players.find(x => x.id === id);
+
+  if(!p) return;
+
+  openModal(
+    "Edit Player",
+    `
+    <div class="formgrid">
+
+      <label>
+        Jersey #
+        <input id="eNum" value="${esc(p.number)}">
+      </label>
+
+      <label>
+        Player Name
+        <input id="eName" value="${esc(p.name)}">
+      </label>
+
+      <label>
+        Position
+        <input id="ePos" value="${esc(p.position)}">
+      </label>
+
+      <label>
+        Class
+        <input id="eClass" value="${esc(p.class)}">
+      </label>
+
+      <label>
+        Height
+        <input id="eHeight" value="${esc(p.height)}">
+      </label>
+
+      <label>
+        Weight
+        <input id="eWeight" value="${esc(p.weight)}">
+      </label>
+
+      <label>
+        Hometown
+        <input id="eHome" value="${esc(p.hometown)}">
+      </label>
+
+      <label>
+        Previous School
+        <input id="ePrev" value="${esc(p.previous)}">
+      </label>
+
+    </div>
+
+    <div class="toolbar">
+
+      <button class="good" onclick="savePlayerEdit('${id}')">
+        Save
+      </button>
+
+      <button class="danger" onclick="deletePlayer('${id}')">
+        Delete
+      </button>
+
+    </div>
+    `
+  );
+
+}
+
+
+function savePlayerEdit(id){
+
+  const p = db.players.find(x => x.id === id);
+
+  if(!p) return;
+
+  p.number =
+    document.getElementById("eNum").value.trim();
+
+  p.name =
+    document.getElementById("eName").value.trim();
+
+  p.position =
+    document.getElementById("ePos").value.trim();
+
+  p.class =
+    document.getElementById("eClass").value.trim();
+
+  p.height =
+    document.getElementById("eHeight").value.trim();
+
+  p.weight =
+    document.getElementById("eWeight").value.trim();
+
+  p.hometown =
+    document.getElementById("eHome").value.trim();
+
+  p.previous =
+    document.getElementById("ePrev").value.trim();
+
+  save();
+  closeModal();
+  renderAll();
+
+}
+
+
+function deletePlayer(id){
+
+  if(!confirm("Delete this player?")) return;
+
+  db.players =
+    db.players.filter(p => p.id !== id);
+
+  save();
+  closeModal();
+  renderAll();
+
+}
+
+
+function renderRoster(){
+
+  const box =
+    document.getElementById("rosterGrid");
+
+  if(!box) return;
+
+  const search =
+    (document.getElementById("rosterSearch")?.value || "")
+      .toLowerCase();
+
+  const list =
+    players().filter(p =>
+      `${p.number} ${p.name} ${p.position}`
+        .toLowerCase()
+        .includes(search)
+    );
+
+  if(!list.length){
+
+    box.innerHTML =
+      `<div class="empty">
+        No players found.
+      </div>`;
+
+    return;
+
+  }
+
+  box.innerHTML =
+    list.map(p => `
+
+      <div class="person">
+
+        <div>
+          <span class="pill">#${esc(p.number || "-")}</span>
+          <span class="pill">${esc(p.position || "-")}</span>
+        </div>
+
+        <b>${esc(p.name)}</b>
+
+        <div class="muted">
+          ${esc(p.class || "")}
+        </div>
+
+        <div class="muted">
+          ${esc(p.height || "")}
+          ${p.weight ? " • " + esc(p.weight) + " lbs" : ""}
+        </div>
+
+        <div class="muted">
+          ${esc(p.hometown || "")}
+        </div>
+
+        <div class="muted">
+          ${esc(p.previous || "")}
+        </div>
+
+        <div class="toolbar">
+
+          <button
+            class="small secondary"
+            onclick="editPlayer('${p.id}')">
+            Edit
+          </button>
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+}
+
+
+function renderPlayers(){
+
+  const box =
+    document.getElementById("playerTable");
+
+  if(!box) return;
+
+  const search =
+    (document.getElementById("playerSearch")?.value || "")
+      .toLowerCase();
+
+  const list =
+    db.players.filter(p =>
+      `${p.name} ${p.position} ${p.number} ${p.hometown}`
+        .toLowerCase()
+        .includes(search)
+    );
+
+  if(!list.length){
+
+    box.innerHTML =
+      `<div class="empty">
+        No players found.
+      </div>`;
+
+    return;
+
+  }
+
+  box.innerHTML = `
+
+    <div class="stat-table">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Position</th>
+            <th>Class</th>
+            <th>Height</th>
+            <th>Weight</th>
+            <th>Hometown</th>
+            <th>Previous</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          ${list.map(p => `
+
+            <tr>
+
+              <td>${esc(p.number)}</td>
+              <td><b>${esc(p.name)}</b></td>
+              <td>${esc(p.position)}</td>
+              <td>${esc(p.class)}</td>
+              <td>${esc(p.height)}</td>
+              <td>${esc(p.weight)}</td>
+              <td>${esc(p.hometown)}</td>
+              <td>${esc(p.previous)}</td>
+
+              <td>
+                <button
+                  class="small secondary"
+                  onclick="editPlayer('${p.id}')">
+                  Edit
+                </button>
+              </td>
+
+            </tr>
+
+          `).join("")}
+
+        </tbody>
+
+      </table>
+
+    </div>
+  `;
+
+}
+
+
+/* GAMES */
+
+function openGame(){
+
+  openModal(
+    "Add Game",
+    `
+    <div class="formgrid">
+
+      <label>
+        Opponent
+        <input id="gOpp" placeholder="North Dakota State">
+      </label>
+
+      <label>
+        Date
+        <input id="gDate" type="date">
+      </label>
+
+      <label>
+        Location
+        <select id="gLoc">
+          <option>Home</option>
+          <option>Away</option>
+          <option>Neutral</option>
+        </select>
+      </label>
+
+      <label>
+        Our Score
+        <input id="gOur" type="number" value="0">
+      </label>
+
+      <label>
+        Opponent Score
+        <input id="gTheir" type="number" value="0">
+      </label>
+
+    </div>
+
+    <div class="toolbar">
+
+      <button class="good" onclick="createGame()">
+        Add Game
+      </button>
+
+    </div>
+    `
+  );
+
+}
+
+
+function openSpecialGame(){
+
+  openModal(
+    "Postseason Game",
+    `
+    <div class="formgrid">
+
+      <label>
+        Opponent
+        <input id="gOpp" placeholder="Opponent">
+      </label>
+
+      <label>
+        Date
+        <input id="gDate" type="date">
+      </label>
+
+      <label>
+        Round
+        <input id="gRound" placeholder="Quarterfinal">
+      </label>
+
+      <label>
+        Location
+        <select id="gLoc">
+          <option>Home</option>
+          <option>Away</option>
+          <option>Neutral</option>
+        </select>
+      </label>
+
+    </div>
+
+    <div class="toolbar">
+
+      <button class="good" onclick="createGame(true)">
+        Add Postseason Game
+      </button>
+
+    </div>
+    `
+  );
+
+}
+
+
+function createGame(postseason=false){
+
+  const opponent =
+    document.getElementById("gOpp")?.value.trim();
+
+  if(!opponent){
+    alert("Enter an opponent.");
+    return;
+  }
+
+  const g = {
+
+    id:uid(),
+
+    teamId:db.activeTeam,
+
+    seasonId:db.activeSeason,
+
+    opponent:opponent,
+
+    date:
+      document.getElementById("gDate")?.value ||
+      new Date().toISOString().slice(0,10),
+
+    location:
+      document.getElementById("gLoc")?.value ||
+      "Home",
+
+    ourScore:
+      Number(document.getElementById("gOur")?.value || 0),
+
+    oppScore:
+      Number(document.getElementById("gTheir")?.value || 0),
+
+    postseason:postseason,
+
+    round:
+      document.getElementById("gRound")?.value || "",
+
+    status:"Final"
+
+  };
+
+  db.games.push(g);
+
+  save();
+  closeModal();
+  renderAll();
+
+}
+
+
+function renderGames(){
+
+  const box =
+    document.getElementById("gameTable");
+
+  if(!box) return;
+
+  const list = games();
+
+  if(!list.length){
+
+    box.innerHTML =
+      `<div class="empty">
+        No games added yet.
+      </div>`;
+
+    return;
+
+  }
+
+  box.innerHTML = `
+
+    <div class="stat-table">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Opponent</th>
+            <th>Location</th>
+            <th>Score</th>
+            <th>Result</th>
+            <th>Type</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          ${list.map(g => {
+
+            let result = "TIE";
+            let cls = "badge-tie";
+
+            if(g.ourScore > g.oppScore){
+              result = "W";
+              cls = "badge-win";
+            }
+
+            if(g.ourScore < g.oppScore){
+              result = "L";
+              cls = "badge-loss";
+            }
+
+            return `
+
+              <tr>
+
+                <td>${esc(g.date)}</td>
+
+                <td>
+                  <b>${esc(g.opponent)}</b>
+                </td>
+
+                <td>${esc(g.location)}</td>
+
+                <td>
+                  ${g.ourScore} - ${g.oppScore}
+                </td>
+
+                <td class="${cls}">
+                  ${result}
+                </td>
+
+                <td>
+                  ${g.postseason ? esc(g.round || "Postseason") : "Regular"}
+                </td>
+
+                <td>
+
+                  <button
+                    class="small danger"
+                    onclick="deleteGame('${g.id}')">
+                    Delete
+                  </button>
+
+                </td>
+
+              </tr>
+
+            `;
+
+          }).join("")}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  `;
+
+}
+
+
+function deleteGame(id){
+
+  if(!confirm("Delete this game?")) return;
+
+  db.games =
+    db.games.filter(g => g.id !== id);
+
+  save();
+  renderAll();
+
+}
+
+
+/* LIVE GAME */
+
+function startGame(){
+
+  if(db.live){
+
+    showView("live");
+    return;
+
+  }
+
+  openModal(
+    "Start Live Game",
+    `
+    <div class="formgrid">
+
+      <label>
+        Opponent
+        <input id="liveOpp" placeholder="Opponent">
+      </label>
+
+    </div>
+
+    <div class="toolbar">
+
+      <button class="good" onclick="createLiveGame()">
+        Start Game
+      </button>
+
+    </div>
+    `
+  );
+
+}
+
+
+function createLiveGame(){
+
+  const opponent =
+    document.getElementById("liveOpp").value.trim();
+
+  if(!opponent){
+    alert("Enter an opponent.");
+    return;
+  }
+
+  db.live = {
+
+    id:uid(),
+
+    teamId:db.activeTeam,
+
+    seasonId:db.activeSeason,
+
+    opponent:opponent,
+
+    ourScore:0,
+
+    oppScore:0,
+
+    quarter:1,
+
+    seconds:900,
+
+    clockRunning:false,
+
+    selectedPlayer:null,
+
+    plays:[]
+
+  };
+
+  selectedPlayer = null;
+
+  save();
+  closeModal();
+  showView("live");
+
+}
+
+
+function renderLive(){
+
+  const noLive =
+    document.getElementById("noLive");
+
+  const liveUI =
+    document.getElementById("liveUI");
+
+  if(!noLive || !liveUI) return;
+
+  if(!db.live){
+
+    noLive.style.display = "block";
+    liveUI.style.display = "none";
+
+    return;
+
+  }
+
+  noLive.style.display = "none";
+  liveUI.style.display = "block";
+
+  document.getElementById("liveTeam").textContent =
+    team()?.name || "Team";
+
+  document.getElementById("opp").textContent =
+    db.live.opponent;
+
+  document.getElementById("ourScore").textContent =
+    db.live.ourScore;
+
+  document.getElementById("oppScore").textContent =
+    db.live.oppScore;
+
+  const min =
+    Math.floor(db.live.seconds / 60)
+      .toString()
+      .padStart(2,"0");
+
+  const sec =
+    (db.live.seconds % 60)
+      .toString()
+      .padStart(2,"0");
+
+  document.getElementById("clock").textContent =
+    `${min}:${sec}`;
+
+  document.getElementById("quarter").textContent =
+    "Q" + db.live.quarter;
+
+  renderLivePlayers();
+  renderActions();
+  renderFeed();
+
+}
+
+
+function renderLivePlayers(){
+
+  const box =
+    document.getElementById("livePlayers");
+
+  if(!box) return;
+
+  const list = players();
+
+  if(!list.length){
+
+    box.innerHTML =
+      `<div class="empty">
+        Add players to the roster first.
+      </div>`;
+
+    return;
+
+  }
+
+  box.innerHTML =
+    list.map(p => `
+
+      <div
+        class="person"
+        style="cursor:pointer;
+        ${selectedPlayer === p.id
+          ? "outline:2px solid var(--a);"
+          : ""}"
+        onclick="selectLivePlayer('${p.id}')">
+
+        <span class="pill">
+          #${esc(p.number || "-")}
+        </span>
+
+        <span class="pill">
+          ${esc(p.position || "-")}
+        </span>
+
+        <br>
+
+        <b>${esc(p.name)}</b>
+
+      </div>
+
+    `).join("");
+
+}
+
+
+function selectLivePlayer(id){
+
+  selectedPlayer = id;
+
+  if(db.live)
+    db.live.selectedPlayer = id;
+
+  renderLive();
+
+}
+
+
+function setStatTab(tab,btn){
+
+  statTab = tab;
+
+  document
+    .querySelectorAll("#statTabs button")
+    .forEach(b => {
+      b.classList.remove("active");
+    });
+
+  btn.classList.add("active");
+
+  renderActions();
+
+}
+
+
+function renderActions(){
+
+  const box =
+    document.getElementById("actions");
+
+  if(!box) return;
+
+  box.innerHTML =
+    STATS[statTab].map(s => `
+
+      <button
+        class="action"
+        onclick="recordStat('${s[0]}','${s[1]}')">
+
+        <span>${s[2]}</span>
+
+        ${s[1]}
+
+      </button>
+
+    `).join("");
+
+}
+
+
+function recordStat(stat,label){
+
+  if(!db.live) return;
+
+  if(!selectedPlayer){
+
+    alert("Select a player first.");
+
+    return;
+
+  }
+
+  const p =
+    players().find(x => x.id === selectedPlayer);
+
+  if(!p) return;
+
+  const play = {
+
+    id:uid(),
+
+    liveId:db.live.id,
+
+    teamId:db.activeTeam,
+
+    seasonId:db.activeSeason,
+
+    playerId:p.id,
+
+    playerName:p.name,
+
+    stat:stat,
+
+    label:label,
+
+    value:1,
+
+    time:Date.now(),
+
+    quarter:db.live.quarter
+
+  };
+
+  db.plays.push(play);
+  db.live.plays.push(play.id);
+
+  save();
+  renderAll();
+
+}
+
+
+function addScore(points,label){
+
+  if(!db.live) return;
+
+  db.live.ourScore += points;
+
+  const play = {
+
+    id:uid(),
+
+    liveId:db.live.id,
+
+    teamId:db.activeTeam,
+
+    seasonId:db.activeSeason,
+
+    playerId:selectedPlayer,
+
+    playerName:
+      players().find(p => p.id === selectedPlayer)?.name || "",
+
+    stat:"score",
+
+    label:label,
+
+    value:points,
+
+    time:Date.now(),
+
+    quarter:db.live.quarter
+
+  };
+
+  db.plays.push(play);
+  db.live.plays.push(play.id);
+
+  save();
+  renderAll();
+
+}
+
+
+function undoLastPlay(){
+
+  if(!db.live || !db.live.plays.length){
+
+    alert("Nothing to undo.");
+
+    return;
+
+  }
+
+  const id =
+    db.live.plays.pop();
+
+  const play =
+    db.plays.find(p => p.id === id);
+
+  if(play?.stat === "score"){
+
+    db.live.ourScore -= play.value;
+
+  }
+
+  db.plays =
+    db.plays.filter(p => p.id !== id);
+
+  save();
+  renderAll();
+
+}
+
+
+function renderFeed(){
+
+  const box =
+    document.getElementById("feed");
+
+  if(!box || !db.live) return;
+
+  const list =
+    db.live.plays
+      .map(id => db.plays.find(p => p.id === id))
+      .filter(Boolean)
+      .reverse();
+
+  if(!list.length){
+
+    box.innerHTML =
+      `<div class="empty">
+        No plays yet.
+      </div>`;
+
+    return;
+
+  }
+
+  box.innerHTML =
+    list.map(p => `
+
+      <div class="play">
+
+        <b>
+          Q${p.quarter}
+        </b>
+
+        —
+        ${esc(p.playerName || "Team")}
+
+        <span class="muted">
+          ${esc(p.label)}
+        </span>
+
+      </div>
+
+    `).join("");
+
+}
+
+
+function toggleClock(){
+
+  if(!db.live) return;
+
+  db.live.clockRunning =
+    !db.live.clockRunning;
+
+  if(db.live.clockRunning){
+
+    if(timer) clearInterval(timer);
+
+    timer = setInterval(() => {
+
+      if(!db.live || !db.live.clockRunning){
+        return;
+      }
+
+      db.live.seconds--;
+
+      if(db.live.seconds <= 0){
+
+        db.live.seconds = 0;
+        db.live.clockRunning = false;
+
+      }
+
+      save();
+      renderLive();
+
+    },1000);
+
+  }else{
+
+    if(timer){
+      clearInterval(timer);
+      timer = null;
+    }
+
+  }
+
+  save();
+  renderLive();
+
+}
+
+
+function nextQuarter(){
+
+  if(!db.live) return;
+
+  if(db.live.quarter < 4){
+
+    db.live.quarter++;
+
+    db.live.seconds = 900;
+
+  }else{
+
+    db.live.quarter = 5;
+    db.live.seconds = 900;
+
+  }
+
+  save();
+  renderLive();
+
+}
+
+
+function finishGame(){
+
+  if(!db.live) return;
+
+  if(timer){
+    clearInterval(timer);
+    timer = null;
+  }
+
+  const g = {
+
+    id:uid(),
+
+    teamId:db.activeTeam,
+
+    seasonId:db.activeSeason,
+
+    opponent:db.live.opponent,
+
+    date:new Date()
+      .toISOString()
+      .slice(0,10),
+
+    location:"",
+
+    ourScore:db.live.ourScore,
+
+    oppScore:db.live.oppScore,
+
+    postseason:false,
+
+    round:"",
+
+    status:"Final"
+
+  };
+
+  db.games.push(g);
+
+  db.live = null;
+
+  save();
+
+  renderAll();
+
+  showView("games");
+
+}
+
+
+/* STATS */
+
+function statTotals(){
+
+  const result = {};
+
+  players().forEach(p => {
+
+    result[p.id] = {};
+
+    STATS.off
+      .concat(STATS.def)
+      .concat(STATS.sp)
+      .forEach(s => {
+        result[p.id][s[0]] = 0;
+      });
+
+  });
+
+  db.plays
+    .filter(p =>
+      p.teamId === db.activeTeam &&
+      p.seasonId === db.activeSeason &&
+      p.playerId
+    )
+    .forEach(play => {
+
+      if(!result[play.playerId])
+        return;
+
+      if(play.stat === "score")
+        return;
+
+      result[play.playerId][play.stat] =
+        (result[play.playerId][play.stat] || 0)
+        + Number(play.value || 1);
+
+    });
+
+  return result;
+
+}
+
+
+function renderStats(){
+
+  const box =
+    document.getElementById("statsTable");
+
+  if(!box) return;
+
+  const list = players();
+
+  if(!list.length){
+
+    box.innerHTML =
+      `<div class="empty">
+        No players or statistics yet.
+      </div>`;
+
+    return;
+
+  }
+
+  const totals = statTotals();
+
+  box.innerHTML = `
+
+    <div class="stat-table">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>POS</th>
+            <th>GP</th>
+            <th>Pass Yds</th>
+            <th>Pass TD</th>
+            <th>Rush Yds</th>
+            <th>Rush TD</th>
+            <th>Rec</th>
+            <th>Rec Yds</th>
+            <th>Rec TD</th>
+            <th>Tackle</th>
+            <th>Sack</th>
+            <th>INT</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          ${list.map(p => {
+
+            const s = totals[p.id] || {};
+
+            return `
+
+              <tr>
+
+                <td><b>${esc(p.name)}</b></td>
+
+                <td>${esc(p.position)}</td>
+
+                <td>${games().length}</td>
+
+                <td>${s.passYds || 0}</td>
+
+                <td>${s.passTD || 0}</td>
+
+                <td>${s.rushYds || 0}</td>
+
+                <td>${s.rushTD || 0}</td>
+
+                <td>${s.reception || 0}</td>
+
+                <td>${s.recYds || 0}</td>
+
+                <td>${s.recTD || 0}</td>
+
+            
